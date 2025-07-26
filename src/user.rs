@@ -32,7 +32,6 @@ pub async fn login(
     "UserNotFound".to_string()
 }
 
-#[axum::debug_handler]
 pub async fn signup(
     State(state): State<AppState>,
     WithRejection(Json(request_body), _): WithRejection<Json<RawRequestBody>, ExtractorError>,
