@@ -1,22 +1,13 @@
-use std::{collections::HashMap, net::SocketAddr, sync::Arc};
+use std::collections::HashMap;
+use std::sync::Arc;
 
-use axum::{
-    Router,
-    extract::{FromRef, State},
-    routing::{get, post},
-};
-use futures::lock::Mutex;
+use axum::Router;
+use axum::extract::State;
+use axum::routing::get;
+use axum_diesel_example::routes;
+use axum_diesel_example::state::AppState;
+use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
-
-use crate::user::{login, signup};
-
-mod extractor_error;
-mod user;
-
-#[derive(Clone, FromRef)]
-pub struct AppState {
-    user_data: Arc<Mutex<HashMap<String, String>>>,
-}
 
 pub async fn debug_command(State(s): State<AppState>) -> String {
     format!("{:?}", s.user_data.lock().await)
@@ -33,8 +24,7 @@ async fn main() {
     // 2. Creating Router
     let app = Router::new()
         .route("/", get(|| async { "hello world!" }))
-        .route("/login", post(login))
-        .route("/signup", post(signup))
+        .merge(routes::auth::routes())
         .route("/debug", get(debug_command))
         .layer(
             // Attach CORS header for convenience
@@ -54,10 +44,5 @@ async fn main() {
         .unwrap();
 
     // 4. Serving the app with the supplied listener (on port 8000)
-    axum::serve(
-        listener,
-        app.into_make_service_with_connect_info::<SocketAddr>(),
-    )
-    .await
-    .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

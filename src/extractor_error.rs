@@ -1,4 +1,6 @@
-use axum::{Json, extract::rejection::JsonRejection, response::IntoResponse};
+use axum::Json;
+use axum::extract::rejection::JsonRejection;
+use axum::response::IntoResponse;
 use serde_json::json;
 use thiserror::Error;
 
@@ -13,7 +15,7 @@ impl IntoResponse for ExtractorError {
         let (status, message) = match self {
             ExtractorError::JsonExtractorRejection(json_rejection) => {
                 (json_rejection.status(), json_rejection.body_text())
-            }
+            },
         };
 
         (status, Json(json!({"message" : message}))).into_response()
