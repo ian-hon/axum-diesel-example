@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
+    <title>Example E-wallet app</title>
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="./styles/login.css">
+</head>
+
+<body>
+    <div id="parent">
+        <div id="container">
+            <h1>login</h1>
+            <h4 id="status-message">
+            </h4>
+            <div id="input-container">
+                <h3>
+                    username :
+                </h3>
+                <input id="username-input" />
+            </div>
+            <div id="input-container">
+                <h3>
+                    password :
+                </h3>
+                <input id="password-input" type="password" />
+            </div>
+            <h2 id="submit-button">
+                login
+            </h2>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.11.1/sha256.min.js" integrity="sha512-YVITnHZw4RIWJdL3B3qiUUjFwe2999f7+GY9p75emmKu62hze4Tr1hSG5SSDPAp1WaMMbjGOZL9YaNzO5UDpYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="./scripts/login.js"></script>
+</body>
+
+</html>

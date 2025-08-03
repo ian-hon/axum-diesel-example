@@ -1,23 +1,25 @@
-use axum::{Json, extract::State, response::IntoResponse};
+use axum::Json;
+use axum::extract::State;
+use axum::response::IntoResponse;
 use axum_extra::extract::WithRejection;
 use serde::{Deserialize, Serialize};
 
-use crate::{AppState, extractor_error::ExtractorError};
+use crate::extractor_error::ExtractorError;
+use crate::state::AppState;
 
 // The request body will be parsed into this struct
-/* Example body:
-{
-    "username": "lorem_ipsum",
-    "password": "foo_bar"
-}
-*/
+// Example body:
+// {
+// "username": "lorem_ipsum",
+// "password": "foo_bar"
+// }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawRequestBody {
     username: String,
     password: String,
 }
 
-pub async fn login(
+pub async fn post_login(
     State(state): State<AppState>,
     WithRejection(Json(request_body), _): WithRejection<Json<RawRequestBody>, ExtractorError>,
 ) -> impl IntoResponse {
@@ -32,7 +34,7 @@ pub async fn login(
     "UserNotFound".to_string()
 }
 
-pub async fn signup(
+pub async fn post_signup(
     State(state): State<AppState>,
     WithRejection(Json(request_body), _): WithRejection<Json<RawRequestBody>, ExtractorError>,
 ) -> impl IntoResponse {
