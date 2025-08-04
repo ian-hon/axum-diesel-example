@@ -7,6 +7,6 @@ use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
-        .route(vpath!("/login"), post(post_login))
-        .route(vpath!("/signup"), post(post_signup))
+        .route(vpath!("/auth/login"), post(post_login))
+        .route(vpath!("/auth/signup"), post(post_signup))
 }
