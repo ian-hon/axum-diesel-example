@@ -11,27 +11,14 @@ const confirmPasswordStatus = document.querySelector("#confirm-password-status")
 
 var inputValidity = false;
 var mode = 'login';
+/**
+ * @see https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html#implement-proper-password-strength-controls
+ */
 const passwordRules = [
     {
         description: 'at least 8 characters',
         regex: "^.{8,}$"
     },
-    {
-        description: 'at least 1 number',
-        regex: ".*\\d.*"
-    },
-    {
-        description: 'at least 1 uppercase letter',
-        regex: ".*[A-Z].*"
-    },
-    {
-        description: 'at least 1 lowercase letter',
-        regex: ".*[a-z].*"
-    },
-    {
-        description: 'at least 1 special character',
-        regex: ".*[!@#$%^&*(),.?:{}|<>].*"
-    }
 ];
 
 // #region mode
@@ -104,8 +91,7 @@ document.querySelector("#submit-button").addEventListener("click", () => {
     const username = usernameField.value;
     const password = passwordField.value;
 
-    localStorage.setItem('username', username);
-    localStorage.setItem('password', sha256(password));
+    // TODO: Send API request.
 
     window.location.href = './index.html';
 })

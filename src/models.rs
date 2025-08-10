@@ -1,3 +1,5 @@
-pub mod auth_body;
-pub mod transactions;
+pub use self::transaction::Transaction;
+pub use self::user::User;
+
+pub mod transaction;
 pub mod user;
