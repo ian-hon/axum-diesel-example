@@ -1,6 +1,14 @@
 const usernameField = document.querySelector("#username-input");
 const passwordField = document.querySelector("#password-input");
 
+function login(username, password) {
+
+}
+
+function signup(username, password) {
+
+}
+
 document.querySelector("#submit-button").addEventListener("click", () => {
     const username = usernameField.value;
     const password = passwordField.value;

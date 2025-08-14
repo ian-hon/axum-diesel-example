@@ -143,18 +143,24 @@ function populateContainer() {
     let result = '';
 
     transactions.forEach((e) => {
-        let time = new Date(e.timestamp);
+        let time = new Date(e.timestamp).toLocaleString().split(', ');
 
         result += `<div class="transaction">
             <div>
                 <img src='./assets/${e.type}.png'/>
-                <h3>
-                    ${currencyFormatter.format(e.amount)}
-                </h3>
+                <div>
+                    <h3>
+                        ${currencyFormatter.format(e.amount)}
+                    </h3>
+                    <h4>
+                        ${e.type == 'outgoing' ? 'to' : 'from'} ${e.party}
+                    </h4>
+                </div>
             </div>
-            <h4>
-                ${time.toLocaleString()} ${e.type == 'outgoing' ? 'to' : 'from'} ${e.party}
-            </h4>
+            <div id="date-section">
+                <h4>${time[1]}</h4>
+                <h4>${time[0]}</h4>
+            </div>
         </div>`
     })
 
