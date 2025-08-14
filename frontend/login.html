@@ -11,25 +11,48 @@
 
 <body>
     <div id="parent">
-        <div id="container">
-            <h1>login</h1>
+        <div id="container" aria-label="login">
+            <h1>e-wallet</h1>
             <h4 id="status-message">
             </h4>
+            <!-- username -->
             <div id="input-container">
                 <h3>
                     username :
                 </h3>
-                <input id="username-input" />
+                <div>
+                    <input id="username-input" />
+                    <div id="status"></div>
+                </div>
             </div>
+            <!-- password -->
             <div id="input-container">
                 <h3>
                     password :
                 </h3>
-                <input id="password-input" type="password" />
+                <div>
+                    <input id="password-input" type="password" />
+                    <div id="password-status"></div>
+                </div>
+            </div>
+            <!-- confirm password -->
+            <div id="input-container">
+                <h3>
+                    confirm password :
+                </h3>
+                <div>
+                    <input id="confirm-password-input" type="password" />
+                    <h4 id="confirm-password-status">
+                        passwords must match
+                    </h4>
+                </div>
             </div>
             <h2 id="submit-button">
                 login
             </h2>
+            <h5 id="toggle-button" onclick="toggleMode()">
+                sign up instead
+            </h5>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.11.1/sha256.min.js"

@@ -1,3 +1,9 @@
+html,
+head,
+body {
+    background: black;
+}
+
 #parent {
     display: flex;
     justify-content: center;
@@ -6,6 +12,8 @@
     background: black;
     height: 100vh;
     width: 100%;
+
+    overflow: hidden;
 
     & #container {
         display: flex;
@@ -28,7 +36,7 @@
             margin-bottom: 1em;
         }
 
-        & h2 {
+        & #submit-button {
             /* background: red; */
             border-style: solid;
             border-width: 1.5px;
@@ -45,9 +53,16 @@
 
             cursor: pointer;
 
+            user-select: none;
+            -webkit-user-select: none;
+
             &:hover {
-                /* transform: scale(1.05); */
                 border-color: #555;
+            }
+
+            &[aria-label='disabled'] {
+                opacity: 0.3;
+                cursor: not-allowed;
             }
         }
 
@@ -66,12 +81,127 @@
 
             margin-bottom: 1em;
 
-            & input {
+            &>div {
                 margin-left: 2ch;
+                margin-bottom: 1em;
 
-                width: 20ch;
+                & input {
+                    margin-bottom: 0.8em;
 
-                font-size: 1.2rem;
+                    width: 25ch;
+
+                    font-size: 1.2rem;
+                }
+            }
+
+            & #confirm-password-status {
+                color: var(--error);
+
+                &[aria-label='disabled'] {
+                    display: none;
+                }
+            }
+
+            &:last-of-type {}
+        }
+
+        & #toggle-button {
+            margin-top: 1em;
+
+            font-style: italic;
+            opacity: 0.5;
+            text-decoration: underline;
+
+            cursor: pointer;
+        }
+
+        #password-status {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-direction: column;
+
+            width: 30ch;
+
+            & .password-check {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+
+                margin-top: 0.4em;
+
+                &:first-child {
+                    margin-top: 0;
+                }
+
+                & h4 {
+                    margin-left: 1ch;
+
+                    font-size: 0.8rem;
+                }
+
+                & img {
+                    height: 1em;
+                    width: 1em;
+                }
+
+                &[aria-label='valid'] {
+                    & h4 {
+                        color: var(--success);
+                    }
+
+                    & img#cross {
+                        display: none;
+                    }
+                }
+
+                &[aria-label='invalid'] {
+                    & h4 {
+                        color: var(--error);
+                    }
+
+                    & img#check {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        &[aria-label='login'] {
+            & #input-container:last-of-type {
+                display: none;
+            }
+
+            & #password-status {
+                display: none;
+            }
+        }
+    }
+}
+
+@media only screen and (max-aspect-ratio:1/1) {
+    #parent {
+        & #container {
+            width: 100%;
+
+            background: none;
+            border: none;
+
+            & #input-container {
+                flex-direction: column;
+
+                & h3 {
+                    opacity: 0.5;
+                    margin-bottom: 0.2em;
+                }
+
+                &>div {
+                    margin-left: 0;
+                }
+            }
+
+            & #password-status {
+                margin-left: 0;
             }
         }
     }

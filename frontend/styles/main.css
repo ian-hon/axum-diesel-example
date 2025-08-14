@@ -8,6 +8,8 @@
     height: 100vh;
     width: 100vw;
 
+    overflow: hidden;
+
     &>div {
         margin: 0 2.5ch 0 5ch;
         flex: 1;

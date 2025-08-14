@@ -7,6 +7,8 @@
     --border-color: #333;
     --border-radius: 20px;
     --tertiary: #2a2d35;
+    --success: #71ba4f;
+    --error: #e15241;
 }
 
 html,
