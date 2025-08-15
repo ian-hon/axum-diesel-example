@@ -49,7 +49,12 @@ pub async fn post_transaction(
         ))?;
     }
 
+    // Start of transaction boundary
+
+    // Hold on to these mutex guards to simulate a transaction.
     let mut users = users.lock().unwrap();
+    let mut transactions = transactions.lock().unwrap();
+
     let user = users
         .get_mut(&payload.sender)
         .context("could not find user")
@@ -63,10 +68,6 @@ pub async fn post_transaction(
             })),
         ))?;
     }
-
-    // Start of transaction boundary
-
-    let mut transactions = transactions.lock().unwrap();
 
     let transaction_id = Uuid::now_v7();
     let transaction = Transaction {
