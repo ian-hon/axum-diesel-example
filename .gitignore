@@ -3,4 +3,7 @@
 *.pdb
 .DS_Store
 debug/
+example.sqlite
+example.sqlite-shm
+example.sqlite-wal
 target/
