@@ -1,0 +1,19 @@
+diff --git a/schema.rs b/schema.rs
+index ef96ced..ba6c543 100644
+--- a/schema.rs
++++ b/schema.rs
+@@ -3,13 +3,13 @@
+ diesel::table! {
+     transactions (id) {
+         id -> Binary,
+         amount -> Text,
+         recipient -> Binary,
+         sender -> Binary,
+-        timestamp -> Text,
++        timestamp -> TimestamptzSqlite,
+     }
+ }
+ 
+ diesel::table! {
+     users (id) {
+         id -> Binary,

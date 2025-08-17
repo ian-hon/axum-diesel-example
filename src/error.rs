@@ -8,7 +8,7 @@ use serde_json::json;
 use tracing::error;
 
 // Make our own error that wraps `anyhow::Error`.
-pub struct AppError(pub anyhow::Error);
+pub struct AppError(anyhow::Error);
 
 #[derive(Debug)]
 pub struct JsonRejection(extract::rejection::JsonRejection);
@@ -62,7 +62,7 @@ impl IntoResponse for JsonRejection {
 
         (
             json_rejection.status(),
-            Json(json!({"title": "InvalidJson", "detail": json_rejection.body_text()})),
+            Json(json!({"title": "InvalidRequest", "detail": json_rejection.body_text()})),
         )
             .into_response()
     }

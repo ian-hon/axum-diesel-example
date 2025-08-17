@@ -1,0 +1,6 @@
+CREATE TABLE users (
+  id BLOB NOT NULL PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  balance TEXT NOT NULL
+) STRICT;

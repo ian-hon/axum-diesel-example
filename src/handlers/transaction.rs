@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-
 use anyhow::Context as _;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -8,13 +5,23 @@ use axum::response::Result;
 use axum::{Extension, Json};
 use axum_extra::extract::WithRejection;
 use bigdecimal::BigDecimal;
+use diesel::prelude::*;
+use diesel_async::AsyncConnection as _;
+#[allow(
+    clippy::unused_trait_names,
+    reason = "error[E0034]: multiple applicable items in scope"
+)]
+use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::error::{AppError, JsonRejection};
 use crate::middleware::auth::AuthenticatedUser;
+use crate::models::transaction::NewTransaction;
 use crate::models::{Transaction, User};
+use crate::state::DbConnectionPool;
 
 #[derive(Deserialize)]
 pub struct PostTranscactionPayload {
@@ -35,11 +42,19 @@ pub struct PostTransactionResponse {
 }
 
 pub async fn post_transaction(
-    State(users): State<Arc<Mutex<HashMap<Uuid, User>>>>,
-    State(transactions): State<Arc<Mutex<HashMap<Uuid, Transaction>>>>,
+    State(pool): State<DbConnectionPool>,
     Extension(authenticated_user): Extension<AuthenticatedUser>,
     WithRejection(Json(payload), _): WithRejection<Json<PostTranscactionPayload>, JsonRejection>,
 ) -> Result<Json<PostTransactionResponse>> {
+    use crate::models::types;
+    use crate::schema::{transactions, users};
+
+    let mut conn = pool
+        .get()
+        .await
+        .context("failed to get database connection")
+        .map_err(AppError::from)?;
+
     if authenticated_user.subject != payload.sender {
         return Err((
             StatusCode::FORBIDDEN,
@@ -49,46 +64,90 @@ pub async fn post_transaction(
         ))?;
     }
 
-    // Start of transaction boundary
+    let created_transaction = conn
+        .transaction(|conn| {
+            Box::pin(async move {
+                let mut sender: User = users::table
+                    .find(types::Uuid::from(payload.sender))
+                    .select(User::as_select())
+                    .first(conn)
+                    .await
+                    .context("could not find user")?;
 
-    // Hold on to these mutex guards to simulate a transaction.
-    let mut users = users.lock().unwrap();
-    let mut transactions = transactions.lock().unwrap();
+                let mut recipient: User = match users::table
+                    .find(types::Uuid::from(payload.recipient))
+                    .select(User::as_select())
+                    .first(conn)
+                    .await
+                {
+                    Ok(recipient) => recipient,
+                    Err(diesel::NotFound) => {
+                        debug!(%payload.recipient, "could not find recipient");
 
-    let user = users
-        .get_mut(&payload.sender)
-        .context("could not find user")
-        .map_err(AppError::from)?;
+                        return Ok(Err((
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({
+                                "title": "InvalidRecipient",
+                            })),
+                        )));
+                    },
+                    Err(err) => {
+                        return Err(err).context("failed to query users")?;
+                    },
+                };
 
-    if user.balance < payload.amount {
-        return Err((
-            StatusCode::FORBIDDEN,
-            Json(json!({
-                "title": "InsufficientBalance",
-            })),
-        ))?;
-    }
+                if sender.balance < payload.amount {
+                    return Ok(Err((
+                        StatusCode::FORBIDDEN,
+                        Json(json!({
+                            "title": "InsufficientBalance",
+                        })),
+                    )));
+                }
 
-    let transaction_id = Uuid::now_v7();
-    let transaction = Transaction {
-        id: transaction_id,
-        amount: payload.amount,
-        recipient: payload.recipient,
-        sender: payload.sender,
-        timestamp: jiff::Timestamp::now(),
-    };
-    transactions.insert(transaction_id, transaction);
-    let transaction = transactions.get(&transaction_id).unwrap();
+                let new_transaction = NewTransaction {
+                    id: Uuid::now_v7(),
+                    amount: payload.amount,
+                    recipient: recipient.id,
+                    sender: sender.id,
+                    timestamp: jiff::Timestamp::now(),
+                };
 
-    user.balance -= &transaction.amount;
+                let created_transaction: Transaction = diesel::insert_into(transactions::table)
+                    .values(new_transaction)
+                    .returning(Transaction::as_returning())
+                    .get_result(conn)
+                    .await
+                    .context("failed to insert transaction")?;
 
-    // End of transaction boundary
+                sender.balance -= &created_transaction.amount;
+                recipient.balance += &created_transaction.amount;
+
+                let _sender: User = diesel::update(users::table)
+                    .set(sender)
+                    .returning(User::as_returning())
+                    .get_result(conn)
+                    .await
+                    .context("failed to update user")?;
+
+                let _recipient: User = diesel::update(users::table)
+                    .set(recipient)
+                    .returning(User::as_returning())
+                    .get_result(conn)
+                    .await
+                    .context("failed to update user")?;
+
+                Ok::<_, anyhow::Error>(Ok(created_transaction))
+            })
+        })
+        .await
+        .map_err(AppError::from)??;
 
     Ok(Json(PostTransactionResponse {
-        id: transaction_id,
-        amount: transaction.amount.clone(),
-        recipient: transaction.recipient,
-        sender: transaction.sender,
-        timestamp: transaction.timestamp,
+        id: created_transaction.id,
+        amount: created_transaction.amount,
+        recipient: created_transaction.recipient,
+        sender: created_transaction.sender,
+        timestamp: created_transaction.timestamp,
     }))
 }

@@ -1,29 +1,28 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-
 use axum::extract::FromRef;
+use diesel::SqliteConnection;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::sync_connection_wrapper::SyncConnectionWrapper;
 use jiff::Span;
 use secrecy::SecretSlice;
 use url::Url;
 use uuid::Uuid;
 
-use crate::models::{Transaction, User};
-
 #[derive(Clone, FromRef)]
 pub struct AppState {
-    pub users: Arc<Mutex<HashMap<Uuid, User>>>,
-    pub transactions: Arc<Mutex<HashMap<Uuid, Transaction>>>,
+    pub db_connection_pool: DbConnectionPool,
 }
 
 #[derive(Clone, FromRef)]
 pub struct AuthState {
+    pub db_connection_pool: DbConnectionPool,
     pub jws_signing_secret: JwsSigningSecret,
     pub access_token_issuer: AccessTokenIssuer,
     pub access_token_expiration: AccessTokenExpiration,
     pub access_token_audience: AccessTokenAudience,
     pub access_token_client_id: AccessTokenClientId,
-    pub users: Arc<Mutex<HashMap<Uuid, User>>>,
 }
+
+pub type DbConnectionPool = Pool<SyncConnectionWrapper<SqliteConnection>>;
 
 #[derive(Clone)]
 pub struct JwsSigningSecret(pub SecretSlice<u8>);
