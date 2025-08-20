@@ -2,6 +2,7 @@
 #import "@preview/cetz:0.4.1"
 #import "@preview/metropolis-polylux:0.1.0" as metropolis
 #import "@preview/polylux:0.4.0": *
+#import "@preview/tiaoma:0.3.0"
 #import metropolis: new-section, focus
 
 #show: metropolis.setup
@@ -165,6 +166,58 @@
 ]
 
 #slide[
+  = Routing
+
+  #grid(columns: (auto, 1fr), align: (left, center), [
+    ```rust
+    use axum::Router;
+    use axum::routing::{get, post};
+    use axum_extra::vpath;
+
+    let app = Router::new()
+        .route(vpath!("/"), get(get_root))
+        .route(vpath!("/cats/{cat_id}"), get(get_cat))
+        .route(vpath!("/cappuccino"), post(post_cappuccino));
+
+    async fn get_root() {}
+    async fn get_cat() {}
+    async fn post_cappuccino() {}
+    ```
+  ], block[
+    #set align(left)
+
+    Compile-time validated paths
+  ])
+]
+
+#slide[
+  = Routing
+
+  #grid(columns: (auto, 1fr), align: (left, center), [
+    ```rust
+    use axum::Router;
+    use axum_extra::routing::{RouterExt as _, TypedPath};
+    use serde::Deserialize;
+
+    #[derive(Deserialize, TypedPath)]
+    #[typed_path("/cats/{cat_id}")]
+    struct GetCatPath { cat_id: u32 }
+
+    async fn get_cat(
+      GetCatPath { cat_id }: GetCatPath,
+    ) {}
+
+    let app = Router::new()
+        .typed_get(get_cat);
+    ```
+  ], block[
+    #set align(left)
+
+    Type-safe routes
+  ])
+]
+
+#slide[
   = Handlers
 
   == Matching path parameters
@@ -214,19 +267,19 @@
 
   == Extracting query parameters
 
-  ```http
-  GET /greeting?name=Frieren HTTP/1.1
-  Host: localhost:3000
-  ```
-
-  #box(inset: (top: 1em), stroke: (top: palette.overlay0.rgb))[
+  #box(inset: (bottom: 1em), stroke: (bottom: palette.overlay0.rgb))[
     ```http
-    HTTP/1.1 200 OK
-    Content-Type: text/plain; charset=utf-8
-
-    Hello, Frieren!
+    GET /greeting?name=Misaka&num=10031 HTTP/1.1
+    Host: localhost:3000
     ```
   ]
+
+  ```http
+  HTTP/1.1 200 OK
+  Content-Type: text/plain; charset=utf-8
+
+  Hello, Misaka 10031!
+  ```
 ]
 
 #slide[
@@ -238,16 +291,15 @@
     use serde::Deserialize;
 
     #[derive(Deserialize)]
-    struct GetGreetingParams {
-        name: String,
-    }
+    struct GetGreetingParams { name: String, num: u16 }
 
     async fn get_greeting(
         Query(GetGreetingParams {
             name,
+            num,
         }): Query<GetGreetingParams>,
     ) -> String {
-        format!("Hello, {name}!")
+        format!("Hello, {name} {num}!")
     }
     ```
   ], block[
@@ -506,6 +558,33 @@
   #grid(columns: (auto, 1fr), align: (left, center), [
     ```rust
     use axum::Router;
+    use axum::http::header;
+    use axum::routing::get;
+    use tower_http::cors::{Any, CorsLayer};
+
+    async fn handler() {}
+
+    let cors_layer = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_headers([header::ACCEPT, header::CONTENT_TYPE]);
+
+    let app = Router::new()
+        .route("/", get(handler))
+        .layer(cors_layer);
+    ```
+  ], block[
+    #set align(left)
+
+    CORS
+  ])
+]
+
+#slide[
+  = Middleware
+
+  #grid(columns: (auto, 1fr), align: (left, center), [
+    ```rust
+    use axum::Router;
     use axum::routing::get;
 
     async fn handler() {}
@@ -635,24 +714,35 @@
 #slide[
   = State
 
-  #set text(size: .9em)
+  ```rust
+  use axum::extract::FromRef;
+
+  #[derive(Clone, FromRef)]
+  pub struct AppState { flavor: Flavor }
+
+  #[derive(Clone)]
+  pub struct Flavor(pub String);
+  ```
+]
+
+#slide[
+  = State
 
   ```rust
   use axum::Router;
   use axum::extract::State;
   use axum::routing::get;
 
-  #[derive(Clone)]
-  struct AppState { cat: String }
+  use crate::state::{AppState, Flavor};
 
-  let state = AppState { flavor: "Mocha".to_owned() };
+  let state = AppState { flavor: Flavor("Mocha".to_owned()) };
 
   let app = Router::new()
       .route("/cat", get(get_cat))
       .with_state(state);
 
-  async fn get_cat(State(flavor): State<String>) -> String {
-      format!("Catppuccin {flavor}")
+  async fn get_cat(State(flavor): State<Flavor>) -> String {
+      format!("Catppuccin {flavor}", flavor = flavor.0)
   }
   ```
 ]
@@ -673,6 +763,22 @@
     Catppuccin Mocha
     ```
   ]
+]
+
+#slide[
+  = Documentation
+
+  - https://docs.rs/axum
+  - https://docs.rs/axum-extra
+
+  #v(1em)
+
+  - https://docs.rs/tower
+  - https://docs.rs/tower-http
+
+  #v(1em)
+
+  - https://docs.rs/hyper
 ]
 
 #new-section[Diesel ORM]
@@ -968,6 +1074,17 @@
   ```
 ]
 
+#slide[
+  = Documentation
+
+  - https://docs.rs/diesel
+  - https://docs.rs/diesel-async
+
+  #v(1em)
+
+  - https://docs.rs/deadpool
+]
+
 #new-section[Example & demo - e-wallet app]
 
 #slide[
@@ -980,6 +1097,17 @@
   #show: focus
 
   Demo time!
+
+  #let url = "https://axumwallet.ianhon.com/"
+
+  #link(url)[
+    #tiaoma.barcode(url, "QRCode", options: (
+      scale: 4.0,
+      fg-color: palette.crust.rgb,
+    ))
+
+    #url
+  ]
 ]
 
 #new-section[Q&A]
@@ -992,7 +1120,16 @@
 
 #slide[
   #show: focus
-  #set page(fill: palette.base.rgb)
+  #let footer = block[
+    #set align(left)
+    #set text(size: 0.8em)
+    #let gh_icon = text(font: "Font Awesome 6 Brands")[]
+
+    #gh_icon ian-hon
+    #h(1em)
+    #gh_icon teohhanhui
+  ]
+  #set page(fill: palette.base.rgb, footer: footer)
   #set text(palette.text.rgb)
 
   Thank You!
