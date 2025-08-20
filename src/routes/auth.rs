@@ -7,6 +7,6 @@ use crate::state::AuthState;
 
 pub fn routes() -> Router<AuthState> {
     Router::new()
-        .route(vpath!("/auth/login"), post(post_login))
-        .route(vpath!("/auth/signup"), post(post_signup))
+        .route(vpath!("/login"), post(post_login))
+        .route(vpath!("/signup"), post(post_signup))
 }
