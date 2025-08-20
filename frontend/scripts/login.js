@@ -7,6 +7,7 @@ const usernameInputEl = document.querySelector("#username-input");
 const passwordInputEl = document.querySelector("#password-input");
 const confirmPasswordInputEl = document.querySelector("#confirm-password-input");
 
+const statusMessageEl = document.querySelector("#status-message");
 const confirmPasswordStatusEl = document.querySelector("#confirm-password-status");
 
 var activeMode = 'login';
@@ -45,6 +46,7 @@ function validateAuthInputs() {
     }
 
     updateSubmitButtonState();
+    statusMessageEl.innerHTML = '';
 }
 
 function updateSubmitButtonState() {
@@ -52,17 +54,87 @@ function updateSubmitButtonState() {
 }
 // #endregion
 
-
+// #region handlers
 function login(username, password) {
     console.log(`attempt login : ${username} : ${password}`);
+    return (async () => {
+        try {
+            const loginRes = await fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (loginRes.status == 403) {
+                statusMessageEl.innerHTML = 'Invalid credentials';
+                return SignupResponse.ERROR;
+            }
+
+            const loginData = await loginRes.json().catch(() => ({}));
+            if (!loginData?.id || !loginData?.access_token) {
+                statusMessageEl.innerHTML = 'Unparseable login body';
+                return SignupResponse.ERROR;
+            }
+
+            localStorage.setItem('id', loginData.id);
+            localStorage.setItem('username', username);
+            localStorage.setItem('access_token', loginData.access_token);
+
+            window.location.href = '/index.html';
+            return SignupResponse.SUCCESS;
+        } catch (err) {
+            // unset loading
+            // console.error('signup error:', err);
+            statusMessageEl.innerHTML = 'Network error';
+            return SignupResponse.ERROR;
+        }
+    })();
 }
 
 function signup(username, password) {
-    console.log(`attempt signup : ${username} : ${password}`);
+    // {id: "0198c861-cf82-79a2-9bf6-aa059fb6df6a"}
+    return (async () => {
+        try {
+            const res = await fetch('/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (res.status === 400) {
+                // username taken
+                statusMessageEl.innerHTML = 'Username taken';
+                return SignupResponse.USERNAME_TAKEN;
+            }
+
+            if (!res.ok) {
+                statusMessageEl.innerHTML = 'Error occured';
+                return SignupResponse.ERROR;
+            }
+
+            // login with these credentials, that we know are valid and legal
+            login(username, password);
+
+            window.location.href = '/index.html';
+            return SignupResponse.SUCCESS;
+        } catch (err) {
+            // unset loading
+            // console.error('signup error:', err);
+            statusMessageEl.innerHTML = 'Network error';
+            return SignupResponse.ERROR;
+        }
+    })();
 }
+// #endregion
 
 document.querySelector("#submit-button").removeEventListener?.("click", () => { }); // no-op to avoid duplicates if reloaded
-submitButtonEl.addEventListener("click", () => {
+submitButtonEl.addEventListener("click", async () => {
     if (!isInputValid) {
         return;
     }
@@ -70,24 +142,13 @@ submitButtonEl.addEventListener("click", () => {
     const username = usernameInputEl.value;
     const password = passwordInputEl.value;
 
-    // TODO: Send API request.
-
-    console.log('redirect');
-
-    let result = (activeMode === 'login' ? login : signup)(username, password);
-
-    // will result be just a result? or does it return a session key?
-    if (result == AuthResult.SUCCESS) {
-        // store session key and redirect
-        // window.location.href = './index.html';
-    } else {
-
-    }
+    (activeMode === 'login' ? login : signup)(username, password);
 })
 
-const AuthResult = Object.freeze({
+const SignupResponse = Object.freeze({
     SUCCESS: 'success',
-    INVALID_CREDENTIALS: 'invalid_credentials'
+    USERNAME_TAKEN: 'username_taken',
+    ERROR: 'error'
 })
 
 
