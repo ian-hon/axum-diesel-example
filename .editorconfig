@@ -38,6 +38,10 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 
+[*.typ]
+indent_style = space
+indent_size = 2
+
 [*.{yaml,yml}]
 indent_style = space
 indent_size = 4
