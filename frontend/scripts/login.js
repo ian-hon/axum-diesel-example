@@ -1,54 +1,54 @@
-const container = document.querySelector("#container");
+const containerEl = document.querySelector("#container");
 
-const toggleButton = document.querySelector("#toggle-button");
-const submitButton = document.querySelector("#submit-button");
+const toggleButtonEl = document.querySelector("#toggle-button");
+const submitButtonEl = document.querySelector("#submit-button");
 
-const usernameField = document.querySelector("#username-input");
-const passwordField = document.querySelector("#password-input");
-const confirmPasswordField = document.querySelector("#confirm-password-input");
+const usernameInputEl = document.querySelector("#username-input");
+const passwordInputEl = document.querySelector("#password-input");
+const confirmPasswordInputEl = document.querySelector("#confirm-password-input");
 
-const confirmPasswordStatus = document.querySelector("#confirm-password-status");
+const confirmPasswordStatusEl = document.querySelector("#confirm-password-status");
 
-var mode = 'login';
+var activeMode = 'login';
 /**
  * @see https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html#implement-proper-password-strength-controls
  */
 const PASSWORD_LENGTH = 8;
-var inputValidity = false;
+var isInputValid = false;
 
 // #region mode
-function toggleMode() {
-    mode = mode == 'login' ? 'signup' : 'login';
-    container.ariaLabel = mode;
+function toggleAuthMode() {
+    activeMode = activeMode == 'login' ? 'signup' : 'login';
+    containerEl.ariaLabel = activeMode;
 
-    toggleButton.innerHTML = mode == 'login' ? 'sign up instead' : 'back to login';
-    submitButton.innerHTML = mode;
+    toggleButtonEl.innerHTML = activeMode == 'login' ? 'sign up instead' : 'back to login';
+    submitButtonEl.innerHTML = activeMode;
 
-    validateInputs();
+    validateAuthInputs();
 }
 // #endregion
 
 // #region password
-function validateInputs() {
-    inputValidity = true;
+function validateAuthInputs() {
+    isInputValid = true;
 
     // username
-    inputValidity = !!usernameField.value;
+    isInputValid = !!usernameInputEl.value;
 
     // password
-    inputValidity = inputValidity && (passwordField.value.length >= PASSWORD_LENGTH);
+    isInputValid = isInputValid && (passwordInputEl.value.length >= PASSWORD_LENGTH);
 
     // confirm password
-    if (mode == "signup") {
-        inputValidity = inputValidity && (confirmPasswordField.value === passwordField.value);
-        confirmPasswordStatus.ariaLabel = (confirmPasswordField.value === passwordField.value) ? 'disabled' : '';
+    if (activeMode == "signup") {
+        isInputValid = isInputValid && (confirmPasswordInputEl.value === passwordInputEl.value);
+        confirmPasswordStatusEl.ariaLabel = (confirmPasswordInputEl.value === passwordInputEl.value) ? 'disabled' : '';
     }
 
-    updateButtonStatus();
+    updateSubmitButtonState();
 }
 
-function updateButtonStatus() {
-    submitButton.ariaLabel = inputValidity ? '' : 'disabled';
+function updateSubmitButtonState() {
+    submitButtonEl.ariaLabel = isInputValid ? '' : 'disabled';
 }
 // #endregion
 
@@ -61,19 +61,20 @@ function signup(username, password) {
     console.log(`attempt signup : ${username} : ${password}`);
 }
 
-document.querySelector("#submit-button").addEventListener("click", () => {
-    if (!inputValidity) {
+document.querySelector("#submit-button").removeEventListener?.("click", () => { }); // no-op to avoid duplicates if reloaded
+submitButtonEl.addEventListener("click", () => {
+    if (!isInputValid) {
         return;
     }
 
-    const username = usernameField.value;
-    const password = passwordField.value;
+    const username = usernameInputEl.value;
+    const password = passwordInputEl.value;
 
     // TODO: Send API request.
 
     console.log('redirect');
 
-    let result = (mode === 'login' ? login : signup)(username, password);
+    let result = (activeMode === 'login' ? login : signup)(username, password);
 
     // will result be just a result? or does it return a session key?
     if (result == AuthResult.SUCCESS) {
@@ -90,8 +91,8 @@ const AuthResult = Object.freeze({
 })
 
 
-updateButtonStatus();
-usernameField.addEventListener('keyup', validateInputs);
-passwordField.addEventListener('keyup', validateInputs);
-confirmPasswordField.addEventListener('keyup', validateInputs);
-validateInputs();
+updateSubmitButtonState();
+usernameInputEl.addEventListener('keyup', validateAuthInputs);
+passwordInputEl.addEventListener('keyup', validateAuthInputs);
+confirmPasswordInputEl.addEventListener('keyup', validateAuthInputs);
+validateAuthInputs();

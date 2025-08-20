@@ -1,4 +1,4 @@
-const transactionComponent = (new DOMParser()).parseFromString(`<div class="transaction">
+const transactionTemplateEl = (new DOMParser()).parseFromString(`<div class="transaction">
     <div>
         <img id="icon" src=''/>
         <div>
@@ -17,21 +17,21 @@ var currencyFormatter = Intl.NumberFormat("en-MY", {
     currency: 'MYR'
 })
 
-const historyContainer = document.querySelector("#history #container");
-const containers = {
+const historyContainerEl = document.querySelector("#history #container");
+const containerEls = {
     'send': document.querySelector("#send-container"),
     // 'receive': document.querySelector("#receive-container"),
     'pending': document.querySelector("#pending-container"),
     'status': document.querySelector("#status-container")
 }
 
-const usernameField = containers.send.querySelector('input#username-input');
-const amountField = containers.send.querySelector('input#amount-input');
+const usernameInputEl = containerEls.send.querySelector('input#username-input');
+const amountInputEl = containerEls.send.querySelector('input#amount-input');
 
-const statusMessage = containers.status.querySelector('#header');
+const statusHeaderEl = containerEls.status.querySelector('#header');
 
-var mode = '';
-var inputValidity = false;
+var activeMode = '';
+var isInputValid = false;
 var transactions = [
     {
         amount: 500.00,
@@ -83,50 +83,50 @@ var transactions = [
     }
 ];
 
-function populateContainer() {
-    historyContainer.innerHTML = '';
+function renderTransactions() {
+    historyContainerEl.innerHTML = '';
 
-    transactions.forEach((e) => {
-        appendTransaction(e);
+    transactions.forEach((transaction) => {
+        renderTransaction(transaction);
     })
 }
 
-function appendTransaction(incoming) {
-    let newComponent = transactionComponent.cloneNode(true);
+function renderTransaction(transaction) {
+    let transactionEl = transactionTemplateEl.cloneNode(true);
 
-    let time = new Date(incoming.timestamp).toLocaleString().split(', ');
+    let dateTimeParts = new Date(transaction.timestamp).toLocaleString().split(', ');
 
-    newComponent.querySelector('#icon').src = `./assets/${incoming.type}.png`;
-    newComponent.querySelector('#amount').innerHTML = currencyFormatter.format(incoming.amount);
-    newComponent.querySelector('#type').innerHTML = `${incoming.type == 'outgoing' ? 'to' : 'from'} ${incoming.party}`;
-    newComponent.querySelector('#date').innerHTML = time[0];
-    newComponent.querySelector('#time').innerHTML = time[1];
+    transactionEl.querySelector('#icon').src = `./assets/${transaction.type}.png`;
+    transactionEl.querySelector('#amount').innerHTML = currencyFormatter.format(transaction.amount);
+    transactionEl.querySelector('#type').innerHTML = `${transaction.type == 'outgoing' ? 'to' : 'from'} ${transaction.party}`;
+    transactionEl.querySelector('#date').innerHTML = dateTimeParts[0];
+    transactionEl.querySelector('#time').innerHTML = dateTimeParts[1];
 
-    historyContainer.appendChild(newComponent);
+    historyContainerEl.appendChild(transactionEl);
 }
 
-function toggleContainer(newMode) {
-    mode = newMode;
+function setActiveMode(newMode) {
+    activeMode = newMode;
 
-    updateContainers();
+    updateContainerStates();
 }
 
-function updateContainers() {
-    for (const [key, value] of Object.entries(containers)) {
-        value.ariaLabel = mode == key ? '' : 'disabled';
+function updateContainerStates() {
+    for (const [key, el] of Object.entries(containerEls)) {
+        el.ariaLabel = activeMode == key ? '' : 'disabled';
     };
 }
 
 // #region send
 function sendMoney() {
-    if (!inputValidity) {
+    if (!isInputValid) {
         return;
     }
 
-    toggleContainer('pending');
+    setActiveMode('pending');
 
     setTimeout(() => {
-        toggleContainer('status');
+        setActiveMode('status');
     }, 1000);
     // send request
     // close menu
@@ -134,16 +134,19 @@ function sendMoney() {
     // update balance
 }
 
-function validateInputs() {
-    inputValidity = !!usernameField.value && !!amountField.value;
-    containers.send.querySelector('#action #send').ariaLabel = inputValidity ? '' : 'disabled';
+function validateSendInputs() {
+    isInputValid = !!usernameInputEl.value && !!amountInputEl.value;
+    isInputValid = isInputValid && (parseFloat(amountInputEl.value) > 0);
+    isInputValid = isInputValid && (parseFloat(amountInputEl.value) > 0);
+
+    containerEls.send.querySelector('#action #send').ariaLabel = isInputValid ? '' : 'disabled';
 }
 // #endregion
 
 // if session key invalid/doesnt exist, redirect to login
 
-usernameField.addEventListener('keyup', validateInputs);
-amountField.addEventListener('keyup', validateInputs);
-populateContainer();
-updateContainers();
-validateInputs();
+usernameInputEl.addEventListener('keyup', validateSendInputs);
+amountInputEl.addEventListener('keyup', validateSendInputs);
+renderTransactions();
+updateContainerStates();
+validateSendInputs();
