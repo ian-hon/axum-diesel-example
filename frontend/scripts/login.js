@@ -54,11 +54,11 @@ function updateButtonStatus() {
 
 
 function login(username, password) {
-
+    console.log(`attempt login : ${username} : ${password}`);
 }
 
 function signup(username, password) {
-
+    console.log(`attempt signup : ${username} : ${password}`);
 }
 
 document.querySelector("#submit-button").addEventListener("click", () => {
@@ -73,8 +73,22 @@ document.querySelector("#submit-button").addEventListener("click", () => {
 
     console.log('redirect');
 
-    window.location.href = './index.html';
+    let result = (mode === 'login' ? login : signup)(username, password);
+
+    // will result be just a result? or does it return a session key?
+    if (result == AuthResult.SUCCESS) {
+        // store session key and redirect
+        // window.location.href = './index.html';
+    } else {
+
+    }
 })
+
+const AuthResult = Object.freeze({
+    SUCCESS: 'success',
+    INVALID_CREDENTIALS: 'invalid_credentials'
+})
+
 
 updateButtonStatus();
 usernameField.addEventListener('keyup', validateInputs);
