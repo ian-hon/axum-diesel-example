@@ -17,8 +17,21 @@ var currencyFormatter = Intl.NumberFormat("en-MY", {
     currency: 'MYR'
 })
 
-var historyContainer = document.querySelector("#history #container");
+const historyContainer = document.querySelector("#history #container");
+const containers = {
+    'send': document.querySelector("#send-container"),
+    // 'receive': document.querySelector("#receive-container"),
+    'pending': document.querySelector("#pending-container"),
+    'status': document.querySelector("#status-container")
+}
 
+const usernameField = containers.send.querySelector('input#username-input');
+const amountField = containers.send.querySelector('input#amount-input');
+
+const statusMessage = containers.status.querySelector('#header');
+
+var mode = '';
+var inputValidity = false;
 var transactions = [
     {
         amount: 500.00,
@@ -92,6 +105,45 @@ function appendTransaction(incoming) {
     historyContainer.appendChild(newComponent);
 }
 
+function toggleContainer(newMode) {
+    mode = newMode;
+
+    updateContainers();
+}
+
+function updateContainers() {
+    for (const [key, value] of Object.entries(containers)) {
+        value.ariaLabel = mode == key ? '' : 'disabled';
+    };
+}
+
+// #region send
+function sendMoney() {
+    if (!inputValidity) {
+        return;
+    }
+
+    toggleContainer('pending');
+
+    setTimeout(() => {
+        toggleContainer('status');
+    }, 1000);
+    // send request
+    // close menu
+    // update transaction list
+    // update balance
+}
+
+function validateInputs() {
+    inputValidity = !!usernameField.value && !!amountField.value;
+    containers.send.querySelector('#action #send').ariaLabel = inputValidity ? '' : 'disabled';
+}
+// #endregion
+
 // if session key invalid/doesnt exist, redirect to login
 
+usernameField.addEventListener('keyup', validateInputs);
+amountField.addEventListener('keyup', validateInputs);
 populateContainer();
+updateContainers();
+validateInputs();

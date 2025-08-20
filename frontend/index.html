@@ -20,14 +20,14 @@
                 <h3 id="balance">$500.00</h3>
             </div>
             <div id="actions">
-                <div id="send">
+                <div id="send" onclick="toggleContainer('send')">
                     <img src="./assets/outgoing.png">
                     <h3>send</h3>
                 </div>
-                <div id="receive">
+                <!-- <div id="receive" onclick="toggleContainer('receive')">
                     <img src="./assets/incoming.png">
                     <h3>receive</h3>
-                </div>
+                </div> -->
             </div>
         </div>
         <div id="history">
@@ -35,6 +35,50 @@
                 history
             </h2>
             <div id="container"></div>
+        </div>
+    </div>
+    <div id="overlay">
+        <div id="send-container">
+            <h2 id="header">
+                send money
+            </h2>
+            <div class="input-field">
+                <h4>
+                    username
+                </h4>
+                <input id="username-input" placeholder="recipient">
+            </div>
+            <div class="input-field">
+                <h4>
+                    amount
+                </h4>
+                <input id="amount-input" placeholder="amount (MYR)" type="number" min="0">
+            </div>
+            <div id="action">
+                <h3 class="button" id="cancel" onclick="toggleContainer('')">cancel</h3>
+                <h3 class="button" id="send" onclick="sendMoney()">send</h3>
+            </div>
+        </div>
+        <!-- <div id="receive-container">
+            <h2 id="header">
+                send money
+            </h2>
+            <input placeholder="recipient username">
+            <div id="action">
+                <h3 id="cancel" onclick="toggleContainer('')">cancel</h3>
+                <h3 id="send">send</h3>
+            </div>
+        </div> -->
+        <div id="pending-container">
+            <div class="loader"></div>
+        </div>
+        <div id="status-container">
+            <h2 id="header">
+                transaction<br>successful!
+            </h2>
+            <div id="action">
+                <h3 class="button" id="cancel" onclick="toggleContainer('')">close</h3>
+            </div>
         </div>
     </div>
     <script src="./scripts/index.js"></script>
