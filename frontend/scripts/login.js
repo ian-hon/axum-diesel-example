@@ -55,81 +55,77 @@ function updateSubmitButtonState() {
 // #endregion
 
 // #region handlers
-function login(username, password) {
-    console.log(`attempt login : ${username} : ${password}`);
-    return (async () => {
-        try {
-            const loginRes = await fetch('/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (loginRes.status == 403) {
+async function login(username, password) {
+    fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+        .then((res) => {
+            if (res.status == 403) {
                 statusMessageEl.innerHTML = 'Invalid credentials';
-                return SignupResponse.ERROR;
+                return null;
             }
 
-            const loginData = await loginRes.json().catch(() => ({}));
-            if (!loginData?.id || !loginData?.access_token) {
+            return res.json();
+        })
+        .then((data) => {
+            if (!data) {
+                return;
+            }
+
+            if (!data?.id || !data?.access_token) {
                 statusMessageEl.innerHTML = 'Unparseable login body';
-                return SignupResponse.ERROR;
+                return;
             }
 
-            localStorage.setItem('id', loginData.id);
+            localStorage.setItem('id', data.id);
             localStorage.setItem('username', username);
-            localStorage.setItem('access_token', loginData.access_token);
+            localStorage.setItem('access_token', data.access_token);
 
             window.location.href = '/index.html';
-            return SignupResponse.SUCCESS;
-        } catch (err) {
-            // unset loading
-            // console.error('signup error:', err);
+        }).catch((err) => {
             statusMessageEl.innerHTML = 'Network error';
-            return SignupResponse.ERROR;
-        }
-    })();
+        })
 }
 
-function signup(username, password) {
-    // {id: "0198c861-cf82-79a2-9bf6-aa059fb6df6a"}
-    return (async () => {
-        try {
-            const res = await fetch('/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
+async function signup(username, password) {
+    fetch('/auth/signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+        .then((res) => {
             if (res.status === 400) {
-                // username taken
                 statusMessageEl.innerHTML = 'Username taken';
-                return SignupResponse.USERNAME_TAKEN;
+                return null;
             }
 
             if (!res.ok) {
                 statusMessageEl.innerHTML = 'Error occured';
-                return SignupResponse.ERROR;
+                return null;
+            }
+
+            return res.json();
+        })
+        .then((data) => {
+            if (!data) {
+                return;
             }
 
             // login with these credentials, that we know are valid and legal
             login(username, password);
-
-            window.location.href = '/index.html';
-            return SignupResponse.SUCCESS;
-        } catch (err) {
-            // unset loading
-            // console.error('signup error:', err);
+        })
+        .catch((err) => {
+            console.log(err);
             statusMessageEl.innerHTML = 'Network error';
-            return SignupResponse.ERROR;
-        }
-    })();
+        })
 }
 // #endregion
 
@@ -142,15 +138,8 @@ submitButtonEl.addEventListener("click", async () => {
     const username = usernameInputEl.value;
     const password = passwordInputEl.value;
 
-    (activeMode === 'login' ? login : signup)(username, password);
+    await (activeMode === 'login' ? login : signup)(username, password);
 })
-
-const SignupResponse = Object.freeze({
-    SUCCESS: 'success',
-    USERNAME_TAKEN: 'username_taken',
-    ERROR: 'error'
-})
-
 
 updateSubmitButtonState();
 usernameInputEl.addEventListener('keyup', validateAuthInputs);

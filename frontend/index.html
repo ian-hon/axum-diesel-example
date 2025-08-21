@@ -12,22 +12,32 @@
 <body>
     <div id="parent">
         <div id="data-section">
-            <div id="user-section">
+            <div id="user-section" class="container">
                 <div>
-                    <img src="./assets//profile.png">
-                    <h3 id="username">lorem_ipsum</h3>
+                    <img id="logout" src="./assets/logout.png" onclick="window.location.href = 'login.html'">
+                    <hr />
+                    <img src="./assets/profile.png">
+                    <div>
+                        <h3 id="username"></h3>
+                        <h4 id="uuid"></h4>
+                    </div>
                 </div>
-                <h3 id="balance">$500.00</h3>
             </div>
-            <div id="actions">
-                <div id="send" onclick="setActiveMode('send')">
-                    <img src="./assets/outgoing.png">
-                    <h3>send</h3>
+            <div id="details-section">
+                <div id="balance-container" class="container">
+                    <h3>balance : </h3>
+                    <h3 id="balance">$500.00</h3>
                 </div>
-                <!-- <div id="receive" onclick="setActiveMode('receive')">
-                    <img src="./assets/incoming.png">
-                    <h3>receive</h3>
-                </div> -->
+                <div id="actions">
+                    <div id="send" class="container" onclick="setActiveMode('send')">
+                        <img src="./assets/outgoing.png">
+                        <h3>send</h3>
+                    </div>
+                    <div id="receive" class="container" onclick="setActiveMode('receive')">
+                        <img src="./assets/incoming.png">
+                        <h3>receive</h3>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="history">
@@ -59,7 +69,7 @@
                 <h3 class="button" id="send" onclick="sendMoney()">send</h3>
             </div>
         </div>
-        <!-- <div id="receive-container">
+        <div id="receive-container">
             <h2 id="header">
                 send money
             </h2>
@@ -68,7 +78,7 @@
                 <h3 id="cancel" onclick="setActiveMode('')">cancel</h3>
                 <h3 id="send">send</h3>
             </div>
-        </div> -->
+        </div>
         <div id="pending-container">
             <div class="loader"></div>
         </div>
