@@ -281,6 +281,12 @@ body {
         }
     }
 
+    & #receive-container {
+        & #qr-code {
+            margin: 2em;
+        }
+    }
+
     & #status-container {
         & #action {
             justify-content: center;

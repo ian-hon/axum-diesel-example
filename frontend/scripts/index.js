@@ -149,10 +149,32 @@ function renderTransactions() {
     })
 }
 
+function renderReceiveQr(text) {
+    const qrEl = containerEls.receive.querySelector('#qr-code');
+    if (!qrEl) return;
+
+    qrEl.innerHTML = '';
+
+    const styles = getComputedStyle(document.documentElement);
+
+    new QRCode(qrEl, {
+        text,
+        width: 200,
+        height: 200,
+        colorDark: styles.getPropertyValue('--background'),
+        colorLight: '#fff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
+
 function setActiveMode(newMode) {
     activeMode = newMode;
 
     updateContainerStates();
+
+    if (newMode === 'receive') {
+        renderReceiveQr(uuid);
+    }
 }
 
 function updateContainerStates() {

@@ -7,6 +7,7 @@
     <title>axum + diesel e-wallet</title>
     <link rel="stylesheet" href="./styles/style.css">
     <link rel="stylesheet" href="./styles/main.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
 
 <body>
@@ -71,12 +72,11 @@
         </div>
         <div id="receive-container">
             <h2 id="header">
-                send money
+                qr code
             </h2>
-            <input placeholder="recipient username">
+            <div id="qr-code"></div>
             <div id="action">
-                <h3 id="cancel" onclick="setActiveMode('')">cancel</h3>
-                <h3 id="send">send</h3>
+                <h3 class="button" id="cancel" onclick="setActiveMode('')">close</h3>
             </div>
         </div>
         <div id="pending-container">
