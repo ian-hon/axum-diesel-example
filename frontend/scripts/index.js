@@ -76,7 +76,7 @@ function renderBalance() {
 function renderTransactions() {
     historyContainerEl.innerHTML = '';
 
-    transactions.forEach((transaction) => {
+    [].forEach((transaction) => {
         // id: Uuid,
         // amount: BigDecimal,
         // recipient: Uuid,
