@@ -76,27 +76,52 @@ function renderBalance() {
 function renderTransactions() {
     historyContainerEl.innerHTML = '';
 
-    [].forEach((transaction) => {
-        // id: Uuid,
-        // amount: BigDecimal,
-        // recipient: Uuid,
-        // sender: Uuid,
-        // timestamp: jiff::Timestamp,
-
-        let transactionEl = transactionTemplateEl.cloneNode(true);
-
-        let dateTimeParts = new Date(transaction.timestamp).toLocaleString().split(', ');
-
-        transactionEl.querySelector('#icon').src = `./assets/${transaction.sender === uuid ? 'outgoing' : 'incoming'}.png`;
-        // transactionEl.querySelector('#icon').src = `./assets/${transaction.type}.png`;
-        transactionEl.querySelector('#amount').innerHTML = currencyFormatter.format(transaction.amount);
-        // transactionEl.querySelector('#type').innerHTML = `${transaction.type == 'outgoing' ? 'to' : 'from'} ${transaction.party}`;
-        transactionEl.querySelector('#type').innerHTML = transaction.sender === uuid ? `to ${transaction.recipient}` : `from ${transaction.sender}`;
-        transactionEl.querySelector('#date').innerHTML = dateTimeParts[0];
-        transactionEl.querySelector('#time').innerHTML = dateTimeParts[1];
-
-        historyContainerEl.appendChild(transactionEl);
+    fetch(`/users/${uuid}/transactions`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json'
+        }
     })
+        .then((r) => {
+            if (r.status === 401 || r.status === 403) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            if (!r.ok) {
+                return null;
+            }
+            return r.json();
+        })
+        .then((data) => {
+            if (!data) return;
+
+            const items = Array.isArray(data.transactions) ? data.transactions : [];
+
+            historyContainerEl.innerHTML = '';
+            items.forEach((transaction) => {
+                const transactionEl = transactionTemplateEl.cloneNode(true);
+
+                const isOutgoing = String(transaction.sender) === String(uuid);
+                const type = isOutgoing ? 'outgoing' : 'incoming';
+
+                const amt = Number(transaction.amount);
+                const dt = new Date(transaction.timestamp);
+                const locale = dt.toLocaleString();
+                const parts = locale.includes(',') ? locale.split(', ') : [dt.toLocaleDateString(), dt.toLocaleTimeString()];
+
+                transactionEl.querySelector('#icon').src = `./assets/${type}.png`;
+                transactionEl.querySelector('#amount').innerHTML = currencyFormatter.format(isNaN(amt) ? 0 : amt);
+                transactionEl.querySelector('#type').innerHTML = isOutgoing ? `to ${transaction.recipient}` : `from ${transaction.sender}`;
+                transactionEl.querySelector('#date').innerHTML = parts[0] || '';
+                transactionEl.querySelector('#time').innerHTML = parts[1] || '';
+
+                historyContainerEl.appendChild(transactionEl);
+            });
+        })
+        .catch((err) => {
+            console.error(err);
+        });
 }
 
 function renderReceiveQr(text) {
@@ -157,7 +182,7 @@ function sendMoney() {
 
     setActiveMode('pending');
 
-    fetch(`/transactions/`, {
+    fetch(`/transactions`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -218,9 +243,9 @@ validateSendInputs();
     } catch (_) { }
 })();
 
-// setInterval(() => {
-//     // horrible, yes
-//     // no ws or sse though so this is the next simplest alternative
-//     renderBalance();
-//     renderTransactions();
-// }, 2000);
+setInterval(() => {
+    // horrible, yes
+    // no ws or sse though so this is the next simplest alternative
+    renderBalance();
+    renderTransactions();
+}, 2000);
