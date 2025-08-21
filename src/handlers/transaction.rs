@@ -123,19 +123,20 @@ pub async fn post_transaction(
                 sender.balance -= &created_transaction.amount;
                 recipient.balance += &created_transaction.amount;
 
-                let _sender: User = diesel::update(users::table)
+                let _sender: User = diesel::update(users::table.find(types::Uuid::from(sender.id)))
                     .set(sender)
                     .returning(User::as_returning())
                     .get_result(conn)
                     .await
                     .context("failed to update user")?;
 
-                let _recipient: User = diesel::update(users::table)
-                    .set(recipient)
-                    .returning(User::as_returning())
-                    .get_result(conn)
-                    .await
-                    .context("failed to update user")?;
+                let _recipient: User =
+                    diesel::update(users::table.find(types::Uuid::from(recipient.id)))
+                        .set(recipient)
+                        .returning(User::as_returning())
+                        .get_result(conn)
+                        .await
+                        .context("failed to update user")?;
 
                 Ok::<_, anyhow::Error>(Ok(created_transaction))
             })

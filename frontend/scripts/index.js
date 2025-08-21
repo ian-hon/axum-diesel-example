@@ -243,9 +243,9 @@ validateSendInputs();
     } catch (_) { }
 })();
 
-setInterval(() => {
-    // horrible, yes
-    // no ws or sse though so this is the next simplest alternative
-    renderBalance();
-    renderTransactions();
-}, 2000);
+// setInterval(() => {
+//     // horrible, yes
+//     // no ws or sse though so this is the next simplest alternative
+//     renderBalance();
+//     renderTransactions();
+// }, 2000);
