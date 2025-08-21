@@ -25,7 +25,7 @@ const containerEls = {
     'status': document.querySelector("#status-container")
 }
 
-const usernameInputEl = containerEls.send.querySelector('input#username-input');
+const usernameInputEl = containerEls.send.querySelector('input#uuid-input');
 const amountInputEl = containerEls.send.querySelector('input#amount-input');
 
 const statusHeaderEl = containerEls.status.querySelector('#header');
@@ -36,56 +36,6 @@ var isInputValid = false;
 var uuid = localStorage.getItem('id');
 var username = localStorage.getItem('username');
 var accessToken = localStorage.getItem('access_token');
-var transactions = [
-    {
-        amount: 500.00,
-        type: "incoming",
-        timestamp: 1753769285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 423.55,
-        type: "outgoing",
-        timestamp: 1753719285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 1250.75,
-        type: "incoming",
-        timestamp: 1753669285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 89.99,
-        type: "outgoing",
-        timestamp: 1753619285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 2000.00,
-        type: "incoming",
-        timestamp: 1753569285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 156.30,
-        type: "outgoing",
-        timestamp: 1753519285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 750.50,
-        type: "incoming",
-        timestamp: 1753469285000,
-        party: "917239154618920879102675647152973871293"
-    },
-    {
-        amount: 45.00,
-        type: "outgoing",
-        timestamp: 1753419285000,
-        party: "917239154618920879102675647152973871293"
-    }
-];
 
 if (!uuid || !username || !accessToken) {
     window.location.href = 'login.html';
@@ -137,11 +87,11 @@ function renderTransactions() {
 
         let dateTimeParts = new Date(transaction.timestamp).toLocaleString().split(', ');
 
-        // transactionEl.querySelector('#icon').src = `./assets/${transaction.sender === uuid ? 'outgoing' : 'incoming'}.png`;
-        transactionEl.querySelector('#icon').src = `./assets/${transaction.type}.png`;
+        transactionEl.querySelector('#icon').src = `./assets/${transaction.sender === uuid ? 'outgoing' : 'incoming'}.png`;
+        // transactionEl.querySelector('#icon').src = `./assets/${transaction.type}.png`;
         transactionEl.querySelector('#amount').innerHTML = currencyFormatter.format(transaction.amount);
-        transactionEl.querySelector('#type').innerHTML = `${transaction.type == 'outgoing' ? 'to' : 'from'} ${transaction.party}`;
-        // transactionEl.querySelector('#type').innerHTML = transaction.sender === uuid ? `to ${transaction.recipient}` : `from ${transaction.sender}`;
+        // transactionEl.querySelector('#type').innerHTML = `${transaction.type == 'outgoing' ? 'to' : 'from'} ${transaction.party}`;
+        transactionEl.querySelector('#type').innerHTML = transaction.sender === uuid ? `to ${transaction.recipient}` : `from ${transaction.sender}`;
         transactionEl.querySelector('#date').innerHTML = dateTimeParts[0];
         transactionEl.querySelector('#time').innerHTML = dateTimeParts[1];
 
@@ -173,7 +123,9 @@ function setActiveMode(newMode) {
     updateContainerStates();
 
     if (newMode === 'receive') {
-        renderReceiveQr(uuid);
+        // Redirect link with recipient UUID as a query parameter
+        const qrLink = `${location.origin}/index.html?to=${encodeURIComponent(uuid)}`;
+        renderReceiveQr(qrLink);
     }
 }
 
@@ -197,7 +149,7 @@ function sendMoney() {
     }
 
     let amount = Number(amountInputEl.value);
-    let recipient = usernameInputEl.value;
+    let recipient = containerEls.send.querySelector('input#uuid-input')?.value;
     if (isNaN(amount) || (amount <= 0) || !recipient) {
         isInputValid = false;
         return;
@@ -209,35 +161,26 @@ function sendMoney() {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         },
-        body: {
-            'amount': amount,
-            'recipient': recipient,
-            'sender': uuid
-        }
+        body: JSON.stringify({
+            amount: amount,
+            recipient: recipient,
+            sender: uuid
+        })
     })
         .then((res) => {
             console.log(res);
-            statusHeaderEl.innerHTML = 'success?';
-
-            // id: Uuid,
-            // amount: BigDecimal,
-            // recipient: Uuid,
-            // sender: Uuid,
-            // timestamp: jiff::Timestamp,
+            statusHeaderEl.innerHTML = res.ok ? 'success!' : 'error';
             setActiveMode('status');
         })
         .catch((err) => {
             console.log(err);
             statusHeaderEl.innerHTML = 'connection<br>error';
             setActiveMode('status');
-        })
+        });
 
-    // send request
-    // close menu
-    // update transaction list
-    // update balance
     renderBalance();
     renderTransactions();
 }
@@ -259,6 +202,21 @@ renderTransactions();
 renderBalance();
 updateContainerStates();
 validateSendInputs();
+
+(function initRecipientFromQuery() {
+    try {
+        const to = new URL(window.location.href).searchParams.get('to');
+        if (to) {
+            const input = containerEls.send.querySelector('input#uuid-input');
+            if (input) {
+                input.value = to;
+                setActiveMode('send');
+                const cleanUrl = `${location.origin}${location.pathname}${location.hash}`;
+                history.replaceState({}, '', cleanUrl);
+            }
+        }
+    } catch (_) { }
+})();
 
 // setInterval(() => {
 //     // horrible, yes

@@ -274,11 +274,11 @@ body {
             margin-bottom: 1em;
         }
 
-        & .input-field {
+        /* & .input-field {
             &:not(:last-child) {
                 margin-top: 2em;
             }
-        }
+        } */
     }
 
     & #receive-container {
